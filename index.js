@@ -41,7 +41,7 @@ const userPrompt = msg.text;
           const response = await axios.post(url, data, { headers: headers });
           const botResponse =  response.data.choices[0].message.content ;
           bot.sendMessage(chatId , botResponse);
-          console.log(botResponse);
+        //   console.log(botResponse);
     } catch (error) {
         console.log("error");
     }
