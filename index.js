@@ -47,9 +47,8 @@ const userPrompt = msg.text;
     }
 });
 
-
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    bot.sendMessage(chatId,"Welcome to the  teleGPT, Powered by OpenAI GPT-4 .\nType  anything to get started." , {
+    bot.sendMessage(chatId,`Welcome ${msg.from.first_name} to teleGPT,Powered by OpenAI GPT-4.\nType  anything to get started.` , {
     });
 })
