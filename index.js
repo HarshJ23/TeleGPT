@@ -38,14 +38,27 @@ async function lookupTime(location, name , chatId) {
 }
 
 
-
-
-
 // telegram bots responds through this. 
 bot.on('message', async (msg) => {
 const chatId = msg.chat.id;
+const msgId =  msg.message_id ;
 const userPrompt = msg.text;
+// const loadingMessage = `...`;
+const loadingMessages = ['.', '..', '...']; 
+let loadingIndex = 0; // Index to track the current loading message
+let loadingMsg;
 try {
+    // loading effect
+    loadingMsg = await bot.sendMessage(chatId, loadingMessages[loadingIndex]);
+    const loadingInterval = setInterval(() => {
+        loadingIndex = (loadingIndex + 1) % loadingMessages.length; // Increment the index cyclically
+        bot.editMessageText(loadingMessages[loadingIndex], {
+            chat_id: chatId,
+            message_id: loadingMsg.message_id
+        });
+    }, 350); // Adjust the interval duration as per your preference
+
+
         const url = 'https://api.openai.com/v1/chat/completions';
         const headers = {
             'Content-type' : 'application/json',
@@ -54,6 +67,7 @@ try {
           const data = {
           model : "gpt-3.5-turbo",
           messages: [{"role": "user", "content": userPrompt}],
+          temperature : 0.7 ,
           functions : [{ // Define the 'lookupTime' function
             name: "lookupTime",
             description: "get the current time in a given location",
@@ -76,7 +90,7 @@ try {
           };
           const response = await axios.post(url, data, { headers: headers });
           const completionResponse = response.data.choices[0].message;
-          const botResponse =  response.data.choices[0].message.content ; 
+          const botResponse =  response.data.choices[0].message.content ;
 
           if(!completionResponse.content) { // Check if the generated response includes a function call
             const functionCallName = completionResponse.function_call.name; 
@@ -91,13 +105,18 @@ try {
 
         }
 else{
-    bot.sendMessage(chatId , botResponse);
+    clearInterval(loadingInterval); 
+    bot.editMessageText(botResponse, {
+        chat_id: chatId,
+        message_id: loadingMsg.message_id
+    });
     console.log(botResponse);
 }
     } catch (error) {
         console.log(error);
     }
 });
+
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
@@ -106,3 +125,8 @@ bot.onText(/\/start/, (msg) => {
 })
 
 
+bot.onText(/\/reset/,(msg)=>{for (let i = 0; i < 200; i++) {
+    bot.deleteMessage(msg.chat.id,msg.message_id-i).catch((er)=>{return})
+//if there isn't any messages to delete bot simply return
+}
+})
